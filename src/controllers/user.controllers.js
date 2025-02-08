@@ -2,6 +2,7 @@ const { apiError } = require("../utils/apiError");
 const asyncHandler = require("../utils/asyncHandler");
 const User = require("../models/user.models");
 const {uploadOnCloudinary} = require("../utils/cloudinary");
+const {apiResponse} = require("../utils/apiResponse")
 
 const registerUser = asyncHandler(async (req, res) => {
   // get user detail from frontend
@@ -42,7 +43,25 @@ const registerUser = asyncHandler(async (req, res) => {
   if(!avatar){
     throw new apiError(400, "Avatar is required");
   }
-  
+
+  User.create({
+    fullname,
+    avatar: avatar.url,
+    coverImage: coverImage?.url || "",
+    email,
+    password,
+    username : username.toLowerCase(),
+  })
+
+  const createUser = await User.findById(User._id).select("-password -refreshToken")
+  if(!createUser){
+    throw new apiError(500, "something went wrong white registering the user")
+  }
+
+  return res.status(201).json(
+    new apiResponse(200, createUser, "User registered Successfully")
+  )
+
 
   // res.status(200).json({message: "user registered successfully"})
 });
